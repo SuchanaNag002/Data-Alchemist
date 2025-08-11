@@ -1,103 +1,127 @@
-import Image from "next/image";
+import { useEffect, useMemo, useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { DataUploader } from '@/components/DataUploader';
+import { DataGrid, ColumnDef } from '@/components/DataGrid';
+import { PrioritizationPanel } from '@/components/PrioritizationPanel';
+import { RuleBuilder } from '@/components/RuleBuilder';
+import { ValidationPanel } from '@/components/ValidationPanel';
+import { NLQuery } from '@/components/NLQuery';
+import { Datasets, ClientRow, WorkerRow, TaskRow, Rule, Weights } from '@/lib/types';
+import { download } from '@/utils/exporters';
+import { serializeClients, serializeWorkers, serializeTasks } from '@/utils/parse';
+import { validateDatasets, buildErrorIndex } from '@/utils/validation';
 
-export default function Home() {
+const Index = () => {
+  const [datasets, setDatasets] = useState<Datasets>({ clients: [], workers: [], tasks: [] });
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [weights, setWeights] = useState<Weights>({ priorityLevel: 50, requestedTaskFulfillment: 50, fairness: 50 });
+
+  const errors = useMemo(() => validateDatasets(datasets, rules), [datasets, rules]);
+  const errorIndex = useMemo(() => buildErrorIndex(errors), [errors]);
+
+  const clientCols: ColumnDef<ClientRow>[] = [
+    { key: 'ClientID', label: 'ClientID' },
+    { key: 'ClientName', label: 'ClientName' },
+    { key: 'PriorityLevel', label: 'PriorityLevel', type: 'number' },
+    { key: 'RequestedTaskIDs', label: 'RequestedTaskIDs', type: 'list' },
+    { key: 'GroupTag', label: 'GroupTag' },
+    { key: 'AttributesJSON', label: 'AttributesJSON', type: 'json' },
+  ];
+  const workerCols: ColumnDef<WorkerRow>[] = [
+    { key: 'WorkerID', label: 'WorkerID' },
+    { key: 'WorkerName', label: 'WorkerName' },
+    { key: 'Skills', label: 'Skills', type: 'list' },
+    { key: 'AvailableSlots', label: 'AvailableSlots', type: 'list' },
+    { key: 'MaxLoadPerPhase', label: 'MaxLoadPerPhase', type: 'number' },
+    { key: 'WorkerGroup', label: 'WorkerGroup' },
+    { key: 'QualificationLevel', label: 'QualificationLevel', type: 'number' },
+  ];
+  const taskCols: ColumnDef<TaskRow>[] = [
+    { key: 'TaskID', label: 'TaskID' },
+    { key: 'TaskName', label: 'TaskName' },
+    { key: 'Category', label: 'Category' },
+    { key: 'Duration', label: 'Duration', type: 'number' },
+    { key: 'RequiredSkills', label: 'RequiredSkills', type: 'list' },
+    { key: 'PreferredPhases', label: 'PreferredPhases', type: 'list' },
+    { key: 'MaxConcurrent', label: 'MaxConcurrent', type: 'number' },
+  ];
+
+  const heroTitle = 'Resource-Allocation Configurator';
+  const heroSubtitle = 'Upload messy spreadsheets, validate instantly, build rules in plain English, and export a clean package.';
+
+  useEffect(() => {
+    document.title = 'Resource Allocation Configurator | Data Alchemist';
+  }, []);
+
+  const exportAll = () => {
+    download('clients.cleaned.csv', serializeClients(datasets.clients), 'text/csv;charset=utf-8');
+    download('workers.cleaned.csv', serializeWorkers(datasets.workers), 'text/csv;charset=utf-8');
+    download('tasks.cleaned.csv', serializeTasks(datasets.tasks), 'text/csv;charset=utf-8');
+    download('rules.json', JSON.stringify({ rules, weights }, null, 2), 'application/json');
+  };
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main>
+      <section className="relative overflow-hidden py-16 md:py-24">
+        <div className="absolute inset-0 opacity-70 pointer-events-none hero-bg" />
+        <div className="container relative grid place-items-center text-center">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{heroTitle}</h1>
+            <p className="mt-4 text-lg text-muted-foreground">{heroSubtitle}</p>
+            <div className="mt-6 flex flex-col gap-2">
+              <Button onClick={exportAll}>Export Clean Data + rules.json</Button>
+              <div className="text-sm text-muted-foreground flex flex-wrap gap-3">
+                <a href="/samples/clients.csv" className="underline">clients.csv</a>
+                <a href="/samples/workers.csv" className="underline">workers.csv</a>
+                <a href="/samples/tasks.csv" className="underline">tasks.csv</a>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+
+      <section className="container pb-20 space-y-10">
+        <Tabs defaultValue="data">
+          <TabsList>
+            <TabsTrigger value="data">Data</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
+          </TabsList>
+          <TabsContent value="data" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <DataUploader entity="clients" onData={(rows)=> setDatasets((d)=> ({...d, clients: rows as ClientRow[]}))} />
+              <DataUploader entity="workers" onData={(rows)=> setDatasets((d)=> ({...d, workers: rows as WorkerRow[]}))} />
+              <DataUploader entity="tasks" onData={(rows)=> setDatasets((d)=> ({...d, tasks: rows as TaskRow[]}))} />
+            </div>
+            {datasets.clients.length > 0 && (
+              <Card><CardContent className="pt-6"><h3 className="font-semibold mb-2">Clients</h3>
+                <DataGrid rows={datasets.clients} setRows={(rows)=> setDatasets((d)=> ({...d, clients: rows as ClientRow[]}))} columns={clientCols} getRowId={(r)=>r.ClientID} entity="clients" errorIndex={errorIndex} />
+              </CardContent></Card>
+            )}
+            {datasets.workers.length > 0 && (
+              <Card><CardContent className="pt-6"><h3 className="font-semibold mb-2">Workers</h3>
+                <DataGrid rows={datasets.workers} setRows={(rows)=> setDatasets((d)=> ({...d, workers: rows as WorkerRow[]}))} columns={workerCols} getRowId={(r)=>r.WorkerID} entity="workers" errorIndex={errorIndex} />
+              </CardContent></Card>
+            )}
+            {datasets.tasks.length > 0 && (
+              <Card><CardContent className="pt-6"><h3 className="font-semibold mb-2">Tasks</h3>
+                <DataGrid rows={datasets.tasks} setRows={(rows)=> setDatasets((d)=> ({...d, tasks: rows as TaskRow[]}))} columns={taskCols} getRowId={(r)=>r.TaskID} entity="tasks" errorIndex={errorIndex} />
+              </CardContent></Card>
+            )}
+          </TabsContent>
+          <TabsContent value="tools" className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <RuleBuilder onRulesChange={setRules} />
+              <PrioritizationPanel onChange={setWeights} />
+              <ValidationPanel errors={errors} />
+            </div>
+            <NLQuery datasets={datasets} setDatasets={setDatasets} errorIndex={errorIndex} />
+          </TabsContent>
+        </Tabs>
+      </section>
+    </main>
   );
-}
+};
+
+export default Index;
