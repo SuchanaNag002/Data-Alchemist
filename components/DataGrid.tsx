@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { ValidationError } from '@/types/page';
 
 export type ColumnDef<T> = {
   key: keyof T;
@@ -16,28 +17,40 @@ interface DataGridProps<T> {
   columns: ColumnDef<T>[];
   getRowId: (row: T) => string;
   entity: 'clients' | 'workers' | 'tasks';
-  errorIndex?: Record<string, any[]>; // key: `${entity}:${id}:${field}`
+  errorIndex?: Record<string, ValidationError[]>; // key: `${entity}:${id}:${field}`
 }
 
-export function DataGrid<T extends Record<string, any>>({ rows, setRows, columns, getRowId, entity, errorIndex }: DataGridProps<T>) {
+export function DataGrid<T extends Record<string, unknown>>({ rows, setRows, columns, getRowId, entity, errorIndex }: DataGridProps<T>) {
   const handleChange = (rowIndex: number, key: keyof T, value: string) => {
     const next = [...rows];
-    const row = { ...next[rowIndex] } as any;
+    const row = { ...next[rowIndex] };
     const col = columns.find((c) => c.key === key);
+    
+    let parsedValue: string | number | string[] | object | null = value;
+
     switch (col?.type) {
       case 'number':
-        row[key] = Number(value);
+        // Ensure that an empty string becomes NaN, which can be handled downstream
+        parsedValue = value === '' ? NaN : Number(value);
         break;
       case 'list':
-        row[key] = value.split(',').map((s) => s.trim()).filter(Boolean);
+        parsedValue = value.split(',').map((s) => s.trim()).filter(Boolean);
         break;
       case 'json':
-        try { row[key] = value ? JSON.parse(value) : null; } catch { row[key] = null; }
+        try { 
+          parsedValue = value ? JSON.parse(value) : null; 
+        } catch { 
+          // If JSON is invalid, you might want to keep the invalid string
+          // for the user to correct, or set it to a specific error state.
+          // For now, setting to null.
+          parsedValue = null; 
+        }
         break;
       default:
-        row[key] = value;
+        parsedValue = value;
     }
-    next[rowIndex] = row;
+    
+    next[rowIndex] = { ...row, [key]: parsedValue };
     setRows(next);
   };
 

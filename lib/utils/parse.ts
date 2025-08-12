@@ -1,49 +1,65 @@
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import { ClientRow, WorkerRow, TaskRow } from '@/types/page';
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
+import { ClientRow, WorkerRow, TaskRow } from "@/types/page";
 
 function parseList(input: unknown): string[] {
-  if (Array.isArray(input)) return input.map(String).map((s) => s.trim()).filter(Boolean);
-  const s = String(input ?? '').trim();
+  if (Array.isArray(input))
+    return input
+      .map(String)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  const s = String(input ?? "").trim();
   if (!s) return [];
-  if (s.startsWith('[') && s.endsWith(']')) {
+  if (s.startsWith("[") && s.endsWith("]")) {
     try {
       const arr = JSON.parse(s);
-      if (Array.isArray(arr)) return arr.map(String).map((x) => x.trim()).filter(Boolean);
+      if (Array.isArray(arr))
+        return arr
+          .map(String)
+          .map((x) => x.trim())
+          .filter(Boolean);
     } catch {}
   }
-  return s.split(',').map((x) => x.trim()).filter(Boolean);
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 function parseNumberList(input: unknown): number[] {
-  if (Array.isArray(input)) return input.map((n) => Number(n)).filter((n) => Number.isFinite(n));
-  const s = String(input ?? '').trim();
+  if (Array.isArray(input))
+    return input.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+  const s = String(input ?? "").trim();
   if (!s) return [];
-  if (s.includes('-') && !s.includes('[')) {
+  if (s.includes("-") && !s.includes("[")) {
     // Range like "1-3"
-    const [a, b] = s.split('-').map((x) => Number(x));
+    const [a, b] = s.split("-").map((x) => Number(x));
     if (Number.isFinite(a) && Number.isFinite(b)) {
       const start = Math.min(a, b);
       const end = Math.max(a, b);
       return Array.from({ length: end - start + 1 }, (_, i) => start + i);
     }
   }
-  if (s.startsWith('[') && s.endsWith(']')) {
+  if (s.startsWith("[") && s.endsWith("]")) {
     try {
       const arr = JSON.parse(s);
-      if (Array.isArray(arr)) return arr.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+      if (Array.isArray(arr))
+        return arr.map((n) => Number(n)).filter((n) => Number.isFinite(n));
     } catch {}
   }
   return s
-    .split(',')
+    .split(",")
     .map((x) => Number(x.trim()))
     .filter((n) => Number.isFinite(n));
 }
 
-function mapHeadersSmart<T extends Record<string, any>>(row: T, headerMap: Record<string, string>): any {
-  const out: Record<string, any> = {};
+function mapHeadersSmart<T extends Record<string, unknown>>(
+  row: T,
+  headerMap: Record<string, string>
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(row)) {
-    const key = (k || '').toLowerCase().replace(/\s+/g, '');
+    const key = (k || "").toLowerCase().replace(/\s+/g, "");
     const mapped = headerMap[key];
     if (mapped) out[mapped] = v;
     else out[k as string] = v; // fallback keep
@@ -52,85 +68,96 @@ function mapHeadersSmart<T extends Record<string, any>>(row: T, headerMap: Recor
 }
 
 const clientHeaderMap: Record<string, string> = {
-  clientid: 'ClientID',
-  clientname: 'ClientName',
-  prioritylevel: 'PriorityLevel',
-  requestedtaskids: 'RequestedTaskIDs',
-  grouptag: 'GroupTag',
-  attributesjson: 'AttributesJSON',
+  clientid: "ClientID",
+  clientname: "ClientName",
+  prioritylevel: "PriorityLevel",
+  requestedtaskids: "RequestedTaskIDs",
+  grouptag: "GroupTag",
+  attributesjson: "AttributesJSON",
 };
 
 const workerHeaderMap: Record<string, string> = {
-  workerid: 'WorkerID',
-  workername: 'WorkerName',
-  skills: 'Skills',
-  availableslots: 'AvailableSlots',
-  maxloadperphase: 'MaxLoadPerPhase',
-  workergroup: 'WorkerGroup',
-  qualificationlevel: 'QualificationLevel',
+  workerid: "WorkerID",
+  workername: "WorkerName",
+  skills: "Skills",
+  availableslots: "AvailableSlots",
+  maxloadperphase: "MaxLoadPerPhase",
+  workergroup: "WorkerGroup",
+  qualificationlevel: "QualificationLevel",
 };
 
 const taskHeaderMap: Record<string, string> = {
-  taskid: 'TaskID',
-  taskname: 'TaskName',
-  category: 'Category',
-  duration: 'Duration',
-  requiredskills: 'RequiredSkills',
-  preferredphases: 'PreferredPhases',
-  maxconcurrent: 'MaxConcurrent',
+  taskid: "TaskID",
+  taskname: "TaskName",
+  category: "Category",
+  duration: "Duration",
+  requiredskills: "RequiredSkills",
+  preferredphases: "PreferredPhases",
+  maxconcurrent: "MaxConcurrent",
 };
 
-export function parseCSV(content: string) {
-  return Papa.parse(content, { header: true, skipEmptyLines: true }).data as any[];
+type ParsedRow = Record<string, string | number>;
+
+export function parseCSV(content: string): ParsedRow[] {
+  return Papa.parse(content, { header: true, skipEmptyLines: true })
+    .data as ParsedRow[];
 }
 
-export function parseXLSX(arrayBuffer: ArrayBuffer) {
-  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+export function parseXLSX(arrayBuffer: ArrayBuffer): ParsedRow[] {
+  const wb = XLSX.read(arrayBuffer, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(ws) as any[];
+  return XLSX.utils.sheet_to_json(ws) as ParsedRow[];
 }
 
-export function toClients(rows: any[]): ClientRow[] {
+export function toClients(rows: ParsedRow[]): ClientRow[] {
   return rows.map((raw) => {
     const r = mapHeadersSmart(raw, clientHeaderMap);
-    let attrs: Record<string, any> | null = null;
+    let attrs: Record<string, unknown> | null = null;
     const attrsRaw = r.AttributesJSON ?? r.attributesjson;
-    if (attrsRaw != null && String(attrsRaw).trim() !== '') {
-      try { attrs = typeof attrsRaw === 'string' ? JSON.parse(attrsRaw) : attrsRaw; } catch { attrs = null; }
+    if (attrsRaw != null && String(attrsRaw).trim() !== "") {
+      try {
+        attrs =
+          typeof attrsRaw === "string"
+            ? JSON.parse(attrsRaw)
+            : (attrsRaw as Record<string, unknown>);
+      } catch {
+        attrs = null;
+      }
     }
     return {
-      ClientID: String(r.ClientID ?? r.clientid ?? '').trim(),
-      ClientName: String(r.ClientName ?? r.clientname ?? '').trim(),
+      ClientID: String(r.ClientID ?? r.clientid ?? "").trim(),
+      ClientName: String(r.ClientName ?? r.clientname ?? "").trim(),
       PriorityLevel: Number(r.PriorityLevel ?? r.prioritylevel ?? 0) || 0,
       RequestedTaskIDs: parseList(r.RequestedTaskIDs ?? r.requestedtaskids),
-      GroupTag: r.GroupTag ?? r.grouptag ?? undefined,
+      GroupTag: (r.GroupTag as string) ?? (r.grouptag as string) ?? undefined,
       AttributesJSON: attrs,
     } as ClientRow;
   });
 }
 
-export function toWorkers(rows: any[]): WorkerRow[] {
+export function toWorkers(rows: ParsedRow[]): WorkerRow[] {
   return rows.map((raw) => {
     const r = mapHeadersSmart(raw, workerHeaderMap);
     return {
-      WorkerID: String(r.WorkerID ?? r.workerid ?? '').trim(),
-      WorkerName: String(r.WorkerName ?? r.workername ?? '').trim(),
+      WorkerID: String(r.WorkerID ?? r.workerid ?? "").trim(),
+      WorkerName: String(r.WorkerName ?? r.workername ?? "").trim(),
       Skills: parseList(r.Skills),
       AvailableSlots: parseNumberList(r.AvailableSlots),
       MaxLoadPerPhase: Number(r.MaxLoadPerPhase ?? 0) || 0,
-      WorkerGroup: r.WorkerGroup ?? undefined,
-      QualificationLevel: r.QualificationLevel != null ? Number(r.QualificationLevel) : undefined,
+      WorkerGroup: (r.WorkerGroup as string) ?? undefined,
+      QualificationLevel:
+        r.QualificationLevel != null ? Number(r.QualificationLevel) : undefined,
     } as WorkerRow;
   });
 }
 
-export function toTasks(rows: any[]): TaskRow[] {
+export function toTasks(rows: ParsedRow[]): TaskRow[] {
   return rows.map((raw) => {
     const r = mapHeadersSmart(raw, taskHeaderMap);
     return {
-      TaskID: String(r.TaskID ?? '').trim(),
-      TaskName: String(r.TaskName ?? '').trim(),
-      Category: r.Category ?? undefined,
+      TaskID: String(r.TaskID ?? "").trim(),
+      TaskName: String(r.TaskName ?? "").trim(),
+      Category: (r.Category as string) ?? undefined,
       Duration: Number(r.Duration ?? 0) || 0,
       RequiredSkills: parseList(r.RequiredSkills),
       PreferredPhases: parseNumberList(r.PreferredPhases),
@@ -145,9 +172,9 @@ export function serializeClients(rows: ClientRow[]): string {
       ClientID: r.ClientID,
       ClientName: r.ClientName,
       PriorityLevel: r.PriorityLevel,
-      RequestedTaskIDs: r.RequestedTaskIDs.join(','),
-      GroupTag: r.GroupTag ?? '',
-      AttributesJSON: r.AttributesJSON ? JSON.stringify(r.AttributesJSON) : '',
+      RequestedTaskIDs: r.RequestedTaskIDs.join(","),
+      GroupTag: r.GroupTag ?? "",
+      AttributesJSON: r.AttributesJSON ? JSON.stringify(r.AttributesJSON) : "",
     }))
   );
 }
@@ -157,11 +184,11 @@ export function serializeWorkers(rows: WorkerRow[]): string {
     rows.map((r) => ({
       WorkerID: r.WorkerID,
       WorkerName: r.WorkerName,
-      Skills: r.Skills.join(','),
-      AvailableSlots: `[${r.AvailableSlots.join(',')}]`,
+      Skills: r.Skills.join(","),
+      AvailableSlots: `[${r.AvailableSlots.join(",")}]`,
       MaxLoadPerPhase: r.MaxLoadPerPhase,
-      WorkerGroup: r.WorkerGroup ?? '',
-      QualificationLevel: r.QualificationLevel ?? '',
+      WorkerGroup: r.WorkerGroup ?? "",
+      QualificationLevel: r.QualificationLevel ?? "",
     }))
   );
 }
@@ -171,10 +198,10 @@ export function serializeTasks(rows: TaskRow[]): string {
     rows.map((r) => ({
       TaskID: r.TaskID,
       TaskName: r.TaskName,
-      Category: r.Category ?? '',
+      Category: r.Category ?? "",
       Duration: r.Duration,
-      RequiredSkills: r.RequiredSkills.join(','),
-      PreferredPhases: `[${r.PreferredPhases.join(',')}]`,
+      RequiredSkills: r.RequiredSkills.join(","),
+      PreferredPhases: `[${r.PreferredPhases.join(",")}]`,
       MaxConcurrent: r.MaxConcurrent,
     }))
   );

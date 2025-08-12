@@ -43,7 +43,7 @@ const Page = () => {
     tasks: [],
   });
   const [rules, setRules] = useState<Rule[]>([]);
-  const [weights, setWeights] = useState<Weights>({
+  const [weights] = useState<Weights>({
     priorityLevel: 50,
     requestedTaskFulfillment: 50,
     fairness: 50,
