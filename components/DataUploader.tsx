@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useRef } from 'react';
 import { parseCSV, parseXLSX, toClients, toWorkers, toTasks } from '@/lib/utils/parse';
 import { ClientRow, WorkerRow, TaskRow, EntityKind } from '@/types/page';
-import { Upload } from 'lucide-react';
+import { Upload, Users, FileText, CheckSquare } from 'lucide-react';
 
 interface Props {
   entity: EntityKind;
@@ -41,15 +41,46 @@ export const DataUploader = ({ entity, onData }: Props) => {
     }
   };
 
+  const getIcon = () => {
+    switch(entity) {
+      case 'clients': return <Users className="w-5 h-5" />;
+      case 'workers': return <FileText className="w-5 h-5" />;
+      case 'tasks': return <CheckSquare className="w-5 h-5" />;
+      default: return <Upload className="w-5 h-5" />;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 capitalize">{entity} Upload</CardTitle>
-        <CardDescription>Upload CSV or XLSX. Smart header mapping is applied.</CardDescription>
+    <Card className="group hover:shadow-xl transition-all duration-300 gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-3 capitalize">
+          <div className="p-2 rounded-lg gradient-brand text-white">
+            {getIcon()}
+          </div>
+          <span className="gradient-brand-text font-bold">{entity} Upload</span>
+        </CardTitle>
+        <CardDescription className="text-sm">
+          Upload CSV or XLSX. Smart header mapping is applied.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center gap-3">
-        <Input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" onChange={(e) => e.target.files && handleFile(e.target.files[0])} />
-        <Button variant="secondary" onClick={() => fileRef.current?.click()} className="flex items-center gap-2"><Upload className="w-4 h-4"/>Choose</Button>
+      <CardContent className="space-y-4">
+        <div className="relative">
+          <Input 
+            ref={fileRef} 
+            type="file" 
+            accept=".csv,.xlsx,.xls" 
+            onChange={(e) => e.target.files && handleFile(e.target.files[0])}
+            className="absolute inset-0 opacity-0 cursor-pointer z-10"
+          />
+          <Button 
+            variant="secondary" 
+            onClick={() => fileRef.current?.click()} 
+            className="w-full gradient-brand text-white border-0 hover:from-orange-800 hover:to-yellow-700 transition-all duration-300 shadow-lg hover:shadow-xl relative z-0"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Choose File
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
