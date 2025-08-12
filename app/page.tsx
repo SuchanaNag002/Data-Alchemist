@@ -5,11 +5,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataUploader } from '@/components/DataUploader';
+import { DataGrid, ColumnDef } from '@/components/DataGrid';
+// import { PrioritizationPanel } from '@/components/PrioritizationPanel';
+// import { RuleBuilder } from '@/components/RuleBuilder';
+// import { ValidationPanel } from '@/components/ValidationPanel';
+// import { NLQuery } from '@/components/NLQuery';
 import { Datasets, ClientRow, WorkerRow, TaskRow, Rule, Weights } from '@/types/page';
 import { download } from '@/lib/utils/exporters';
 import { serializeClients, serializeWorkers, serializeTasks } from '@/lib/utils/parse';
 import { validateDatasets, buildErrorIndex } from '@/lib/utils/validation';
-import { FileText, Users, CheckSquare, TrendingUp, Settings, BarChart3 } from 'lucide-react';
+import { FileText, Users, CheckSquare, TrendingUp, Settings, Database, MessageSquare, AlertCircle } from 'lucide-react';
 
 const Page = () => {
   const [datasets, setDatasets] = useState<Datasets>({ clients: [], workers: [], tasks: [] });
@@ -18,6 +23,34 @@ const Page = () => {
 
   const errors = useMemo(() => validateDatasets(datasets, rules), [datasets, rules]);
   const errorIndex = useMemo(() => buildErrorIndex(errors), [errors]);
+
+  // Column definitions from the first file
+  const clientCols: ColumnDef<ClientRow>[] = [
+    { key: 'ClientID', label: 'ClientID' },
+    { key: 'ClientName', label: 'ClientName' },
+    { key: 'PriorityLevel', label: 'PriorityLevel', type: 'number' },
+    { key: 'RequestedTaskIDs', label: 'RequestedTaskIDs', type: 'list' },
+    { key: 'GroupTag', label: 'GroupTag' },
+    { key: 'AttributesJSON', label: 'AttributesJSON', type: 'json' },
+  ];
+  const workerCols: ColumnDef<WorkerRow>[] = [
+    { key: 'WorkerID', label: 'WorkerID' },
+    { key: 'WorkerName', label: 'WorkerName' },
+    { key: 'Skills', label: 'Skills', type: 'list' },
+    { key: 'AvailableSlots', label: 'AvailableSlots', type: 'list' },
+    { key: 'MaxLoadPerPhase', label: 'MaxLoadPerPhase', type: 'number' },
+    { key: 'WorkerGroup', label: 'WorkerGroup' },
+    { key: 'QualificationLevel', label: 'QualificationLevel', type: 'number' },
+  ];
+  const taskCols: ColumnDef<TaskRow>[] = [
+    { key: 'TaskID', label: 'TaskID' },
+    { key: 'TaskName', label: 'TaskName' },
+    { key: 'Category', label: 'Category' },
+    { key: 'Duration', label: 'Duration', type: 'number' },
+    { key: 'RequiredSkills', label: 'RequiredSkills', type: 'list' },
+    { key: 'PreferredPhases', label: 'PreferredPhases', type: 'list' },
+    { key: 'MaxConcurrent', label: 'MaxConcurrent', type: 'number' },
+  ];
 
   const heroTitle = 'Resource Allocation Configurator';
   const heroSubtitle = 'Upload messy spreadsheets, validate instantly, build rules in plain English, and export a clean package.';
@@ -63,7 +96,7 @@ const Page = () => {
       </section>
 
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Tabs defaultValue="data" className="w-full">
             <div className="flex justify-center mb-6 sm:mb-8">
               <TabsList className="bg-white/70 backdrop-blur-sm shadow-lg border gradient-brand-border rounded-xl p-1">
@@ -71,12 +104,14 @@ const Page = () => {
                   value="data" 
                   className="data-[state=active]:gradient-brand data-[state=active]:text-white px-6 py-2 rounded-lg font-medium transition-all duration-300"
                 >
+                  <Database className="w-4 h-4 mr-2" />
                   Data
                 </TabsTrigger>
                 <TabsTrigger 
                   value="tools" 
                   className="data-[state=active]:gradient-brand data-[state=active]:text-white px-6 py-2 rounded-lg font-medium transition-all duration-300"
                 >
+                  <Settings className="w-4 h-4 mr-2" />
                   Tools
                 </TabsTrigger>
               </TabsList>
@@ -99,110 +134,180 @@ const Page = () => {
               </div>
               
               {datasets.clients.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border">
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg gradient-brand">
-                        <Users className="w-4 h-4 text-white" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg gradient-brand">
+                          <Users className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold gradient-brand-text text-lg">
+                          Clients ({datasets.clients.length} records)
+                        </h3>
                       </div>
-                      <h3 className="font-semibold gradient-brand-text">
-                        Clients Data Loaded
-                      </h3>
+                      {errors.filter(e => e.entity === 'clients').length > 0 && (
+                        <div className="flex items-center gap-1 text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-sm">{errors.filter(e => e.entity === 'clients').length} issues</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground ml-11">
-                      {datasets.clients.length} records ready for processing and validation.
-                    </p>
+                    <div className="overflow-hidden rounded-lg">
+                      <DataGrid 
+                        rows={datasets.clients} 
+                        setRows={(rows) => setDatasets((d) => ({ ...d, clients: rows as ClientRow[] }))} 
+                        columns={clientCols} 
+                        getRowId={(r) => r.ClientID} 
+                        entity="clients" 
+                        errorIndex={errorIndex} 
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               )}
               
               {datasets.workers.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border">
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg gradient-brand">
-                        <FileText className="w-4 h-4 text-white" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg gradient-brand">
+                          <FileText className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold gradient-brand-text text-lg">
+                          Workers ({datasets.workers.length} records)
+                        </h3>
                       </div>
-                      <h3 className="font-semibold gradient-brand-text">
-                        Workers Data Loaded
-                      </h3>
+                      {errors.filter(e => e.entity === 'workers').length > 0 && (
+                        <div className="flex items-center gap-1 text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-sm">{errors.filter(e => e.entity === 'workers').length} issues</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground ml-11">
-                      {datasets.workers.length} records ready for processing and validation.
-                    </p>
+                    <div className="overflow-hidden rounded-lg">
+                      <DataGrid 
+                        rows={datasets.workers} 
+                        setRows={(rows) => setDatasets((d) => ({ ...d, workers: rows as WorkerRow[] }))} 
+                        columns={workerCols} 
+                        getRowId={(r) => r.WorkerID} 
+                        entity="workers" 
+                        errorIndex={errorIndex} 
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               )}
               
               {datasets.tasks.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border">
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
                   <CardContent className="pt-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg gradient-brand">
-                        <CheckSquare className="w-4 h-4 text-white" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg gradient-brand">
+                          <CheckSquare className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="font-semibold gradient-brand-text text-lg">
+                          Tasks ({datasets.tasks.length} records)
+                        </h3>
                       </div>
-                      <h3 className="font-semibold gradient-brand-text">
-                        Tasks Data Loaded
-                      </h3>
+                      {errors.filter(e => e.entity === 'tasks').length > 0 && (
+                        <div className="flex items-center gap-1 text-red-600">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-sm">{errors.filter(e => e.entity === 'tasks').length} issues</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground ml-11">
-                      {datasets.tasks.length} records ready for processing and validation.
-                    </p>
+                    <div className="overflow-hidden rounded-lg">
+                      <DataGrid 
+                        rows={datasets.tasks} 
+                        setRows={(rows) => setDatasets((d) => ({ ...d, tasks: rows as TaskRow[] }))} 
+                        columns={taskCols} 
+                        getRowId={(r) => r.TaskID} 
+                        entity="tasks" 
+                        errorIndex={errorIndex} 
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               )}
             </TabsContent>
             
             <TabsContent value="tools" className="mt-0 space-y-6">
+              {/* Tool Cards Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                <Card className="group gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6 text-center">
-                    <div className="mb-4">
-                      <div className="p-3 rounded-lg gradient-brand mx-auto w-fit">
-                        <CheckSquare className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <h3 className="font-semibold gradient-brand-text mb-2 text-lg">
-                      Validation Tools
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Validate your data integrity and consistency with advanced rules.
-                    </p>
-                  </CardContent>
-                </Card>
-                
-                <Card className="group gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6 text-center">
-                    <div className="mb-4">
-                      <div className="p-3 rounded-lg gradient-brand mx-auto w-fit">
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 rounded-lg gradient-brand">
                         <Settings className="w-6 h-6 text-white" />
                       </div>
+                      <h3 className="font-semibold gradient-brand-text text-lg">
+                        Rule Builder
+                      </h3>
                     </div>
-                    <h3 className="font-semibold gradient-brand-text mb-2 text-lg">
-                      Rule Builder
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Create complex allocation rules using plain English syntax.
-                    </p>
+                    <div className="space-y-4">
+                      {/* <RuleBuilder onRulesChange={setRules} /> */}
+                    </div>
                   </CardContent>
                 </Card>
                 
-                <Card className="group gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 hover:shadow-xl transition-all duration-300 md:col-span-2 xl:col-span-1">
-                  <CardContent className="p-6 text-center">
-                    <div className="mb-4">
-                      <div className="p-3 rounded-lg gradient-brand mx-auto w-fit">
-                        <BarChart3 className="w-6 h-6 text-white" />
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 rounded-lg gradient-brand">
+                        <TrendingUp className="w-6 h-6 text-white" />
                       </div>
+                      <h3 className="font-semibold gradient-brand-text text-lg">
+                        Prioritization
+                      </h3>
                     </div>
-                    <h3 className="font-semibold gradient-brand-text mb-2 text-lg">
-                      Analytics Dashboard
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Analyze resource allocation patterns and optimization metrics.
-                    </p>
+                    <div className="space-y-4">
+                      {/* <PrioritizationPanel onChange={setWeights} /> */}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300 md:col-span-2 xl:col-span-1">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 rounded-lg gradient-brand">
+                        <AlertCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="font-semibold gradient-brand-text text-lg">
+                        Validation
+                      </h3>
+                    </div>
+                    <div className="space-y-4">
+                      {/* <ValidationPanel errors={errors} /> */}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Natural Language Query Section */}
+              <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 rounded-lg gradient-brand">
+                      <MessageSquare className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold gradient-brand-text text-xl">
+                        Natural Language Query
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Ask questions about your data or request modifications in plain English
+                      </p>
+                    </div>
+                  </div>
+                  {/* <NLQuery 
+                    datasets={datasets} 
+                    setDatasets={setDatasets} 
+                    errorIndex={errorIndex} 
+                  /> */}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
