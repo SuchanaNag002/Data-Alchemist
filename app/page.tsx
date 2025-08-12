@@ -20,11 +20,11 @@ const Page = () => {
   const [datasets, setDatasets] = useState<Datasets>({ clients: [], workers: [], tasks: [] });
   const [rules, setRules] = useState<Rule[]>([]);
   const [weights, setWeights] = useState<Weights>({ priorityLevel: 50, requestedTaskFulfillment: 50, fairness: 50 });
+  const [activeDataTab, setActiveDataTab] = useState<string>('clients');
 
   const errors = useMemo(() => validateDatasets(datasets, rules), [datasets, rules]);
   const errorIndex = useMemo(() => buildErrorIndex(errors), [errors]);
 
-  // Column definitions from the first file
   const clientCols: ColumnDef<ClientRow>[] = [
     { key: 'ClientID', label: 'ClientID' },
     { key: 'ClientName', label: 'ClientName' },
@@ -65,6 +65,18 @@ const Page = () => {
     download('tasks.cleaned.csv', serializeTasks(datasets.tasks), 'text/csv;charset=utf-8');
     download('rules.json', JSON.stringify({ rules, weights }, null, 2), 'application/json');
   };
+
+  const availableTabs = [
+    { key: 'clients', label: 'Clients', icon: Users, hasData: datasets.clients.length > 0 },
+    { key: 'workers', label: 'Workers', icon: FileText, hasData: datasets.workers.length > 0 },
+    { key: 'tasks', label: 'Tasks', icon: CheckSquare, hasData: datasets.tasks.length > 0 },
+  ].filter(tab => tab.hasData);
+
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.key === activeDataTab)) {
+      setActiveDataTab(availableTabs[0].key);
+    }
+  }, [availableTabs, activeDataTab]);
 
   return (
     <main className="min-h-screen gradient-brand-bg">
@@ -133,108 +145,141 @@ const Page = () => {
                 />
               </div>
               
-              {datasets.clients.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg gradient-brand">
-                          <Users className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold gradient-brand-text text-lg">
-                          Clients ({datasets.clients.length} records)
-                        </h3>
-                      </div>
-                      {errors.filter(e => e.entity === 'clients').length > 0 && (
-                        <div className="flex items-center gap-1 text-red-600">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-sm">{errors.filter(e => e.entity === 'clients').length} issues</span>
-                        </div>
+              {availableTabs.length > 0 && (
+                <>
+                  <div className="flex justify-center">
+                    <div className="flex items-center gap-1 bg-white/50 backdrop-blur-sm rounded-lg p-1 border shadow-sm">
+                      {availableTabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeDataTab === tab.key;
+                        const errorCount = errors.filter(e => e.entity === tab.key).length;
+                        
+                        return (
+                          <button
+                            key={tab.key}
+                            onClick={() => setActiveDataTab(tab.key)}
+                            className={`
+                              px-4 py-2 rounded-md font-medium transition-all duration-300 flex items-center gap-2
+                              ${isActive 
+                                ? 'bg-gray-200 text-gray-900 border-b-2 border-orange-500' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                              }
+                            `}
+                          >
+                            <Icon className="w-4 h-4" />
+                            {tab.label}
+                            {errorCount > 0 && (
+                              <div className="flex items-center ml-1">
+                                <AlertCircle className="w-3 h-3 text-red-500" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
+                    <CardContent className="pt-6">
+                      {activeDataTab === 'clients' && datasets.clients.length > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg gradient-brand">
+                                <Users className="w-5 h-5 text-white" />
+                              </div>
+                              <h3 className="font-semibold gradient-brand-text text-lg">
+                                Clients ({datasets.clients.length} records)
+                              </h3>
+                            </div>
+                            {errors.filter(e => e.entity === 'clients').length > 0 && (
+                              <div className="flex items-center gap-1 text-red-600">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-sm">{errors.filter(e => e.entity === 'clients').length} issues</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="overflow-hidden rounded-lg">
+                            <DataGrid 
+                              rows={datasets.clients} 
+                              setRows={(rows) => setDatasets((d) => ({ ...d, clients: rows as ClientRow[] }))} 
+                              columns={clientCols} 
+                              getRowId={(r) => r.ClientID} 
+                              entity="clients" 
+                              errorIndex={errorIndex} 
+                            />
+                          </div>
+                        </>
                       )}
-                    </div>
-                    <div className="overflow-hidden rounded-lg">
-                      <DataGrid 
-                        rows={datasets.clients} 
-                        setRows={(rows) => setDatasets((d) => ({ ...d, clients: rows as ClientRow[] }))} 
-                        columns={clientCols} 
-                        getRowId={(r) => r.ClientID} 
-                        entity="clients" 
-                        errorIndex={errorIndex} 
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {datasets.workers.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg gradient-brand">
-                          <FileText className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold gradient-brand-text text-lg">
-                          Workers ({datasets.workers.length} records)
-                        </h3>
-                      </div>
-                      {errors.filter(e => e.entity === 'workers').length > 0 && (
-                        <div className="flex items-center gap-1 text-red-600">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-sm">{errors.filter(e => e.entity === 'workers').length} issues</span>
-                        </div>
+                      
+                      {activeDataTab === 'workers' && datasets.workers.length > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg gradient-brand">
+                                <FileText className="w-5 h-5 text-white" />
+                              </div>
+                              <h3 className="font-semibold gradient-brand-text text-lg">
+                                Workers ({datasets.workers.length} records)
+                              </h3>
+                            </div>
+                            {errors.filter(e => e.entity === 'workers').length > 0 && (
+                              <div className="flex items-center gap-1 text-red-600">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-sm">{errors.filter(e => e.entity === 'workers').length} issues</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="overflow-hidden rounded-lg">
+                            <DataGrid 
+                              rows={datasets.workers} 
+                              setRows={(rows) => setDatasets((d) => ({ ...d, workers: rows as WorkerRow[] }))} 
+                              columns={workerCols} 
+                              getRowId={(r) => r.WorkerID} 
+                              entity="workers" 
+                              errorIndex={errorIndex} 
+                            />
+                          </div>
+                        </>
                       )}
-                    </div>
-                    <div className="overflow-hidden rounded-lg">
-                      <DataGrid 
-                        rows={datasets.workers} 
-                        setRows={(rows) => setDatasets((d) => ({ ...d, workers: rows as WorkerRow[] }))} 
-                        columns={workerCols} 
-                        getRowId={(r) => r.WorkerID} 
-                        entity="workers" 
-                        errorIndex={errorIndex} 
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {datasets.tasks.length > 0 && (
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg gradient-brand">
-                          <CheckSquare className="w-5 h-5 text-white" />
-                        </div>
-                        <h3 className="font-semibold gradient-brand-text text-lg">
-                          Tasks ({datasets.tasks.length} records)
-                        </h3>
-                      </div>
-                      {errors.filter(e => e.entity === 'tasks').length > 0 && (
-                        <div className="flex items-center gap-1 text-red-600">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-sm">{errors.filter(e => e.entity === 'tasks').length} issues</span>
-                        </div>
+                      
+                      {activeDataTab === 'tasks' && datasets.tasks.length > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 rounded-lg gradient-brand">
+                                <CheckSquare className="w-5 h-5 text-white" />
+                              </div>
+                              <h3 className="font-semibold gradient-brand-text text-lg">
+                                Tasks ({datasets.tasks.length} records)
+                              </h3>
+                            </div>
+                            {errors.filter(e => e.entity === 'tasks').length > 0 && (
+                              <div className="flex items-center gap-1 text-red-600">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-sm">{errors.filter(e => e.entity === 'tasks').length} issues</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="overflow-hidden rounded-lg">
+                            <DataGrid 
+                              rows={datasets.tasks} 
+                              setRows={(rows) => setDatasets((d) => ({ ...d, tasks: rows as TaskRow[] }))} 
+                              columns={taskCols} 
+                              getRowId={(r) => r.TaskID} 
+                              entity="tasks" 
+                              errorIndex={errorIndex} 
+                            />
+                          </div>
+                        </>
                       )}
-                    </div>
-                    <div className="overflow-hidden rounded-lg">
-                      <DataGrid 
-                        rows={datasets.tasks} 
-                        setRows={(rows) => setDatasets((d) => ({ ...d, tasks: rows as TaskRow[] }))} 
-                        columns={taskCols} 
-                        getRowId={(r) => r.TaskID} 
-                        entity="tasks" 
-                        errorIndex={errorIndex} 
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </>
               )}
             </TabsContent>
             
             <TabsContent value="tools" className="mt-0 space-y-6">
-              {/* Tool Cards Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardContent className="p-6">
@@ -285,7 +330,6 @@ const Page = () => {
                 </Card>
               </div>
 
-              {/* Natural Language Query Section */}
               <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-6">
