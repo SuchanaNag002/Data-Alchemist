@@ -9,7 +9,7 @@ import { DataGrid, ColumnDef } from "@/components/DataGrid";
 // import { PrioritizationPanel } from '@/components/PrioritizationPanel';
 import { RuleBuilder } from "@/components/RuleBuilder";
 // import { ValidationPanel } from '@/components/ValidationPanel';
-// import { NLQuery } from '@/components/NLQuery';
+import { NLQuery } from "@/components/NLQuery";
 import {
   Datasets,
   ClientRow,
@@ -477,11 +477,11 @@ const Page = () => {
                       </p>
                     </div>
                   </div>
-                  {/* <NLQuery 
-                    datasets={datasets} 
-                    setDatasets={setDatasets} 
-                    errorIndex={errorIndex} 
-                  /> */}
+                  <NLQuery
+                    datasets={datasets}
+                    setDatasets={setDatasets}
+                    errorIndex={errorIndex}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
