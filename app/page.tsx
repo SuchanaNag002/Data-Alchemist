@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataUploader } from "@/components/DataUploader";
 import { DataGrid, ColumnDef } from "@/components/DataGrid";
-// import { PrioritizationPanel } from '@/components/PrioritizationPanel';
+import { PrioritizationPanel } from '@/components/PrioritizationPanel';
 import { RuleBuilder } from "@/components/RuleBuilder";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { NLQuery } from "@/components/NLQuery";
@@ -211,7 +211,7 @@ const Page = () => {
             </div>
 
             <TabsContent value="data" className="space-y-6 mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
                 <DataUploader
                   entity="clients"
                   onData={(rows) =>
@@ -444,8 +444,8 @@ const Page = () => {
                   </CardContent>
                 </Card>
 
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300 md:col-span-2 xl:col-span-1">
-                  <CardContent className="p-6">
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300 md:col-span-2 xl:col-span-1 flex flex-col">
+                  <CardContent className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-3 rounded-lg gradient-brand">
                         <AlertCircle className="w-6 h-6 text-white" />
