@@ -8,7 +8,7 @@ import { DataUploader } from "@/components/DataUploader";
 import { DataGrid, ColumnDef } from "@/components/DataGrid";
 // import { PrioritizationPanel } from '@/components/PrioritizationPanel';
 import { RuleBuilder } from "@/components/RuleBuilder";
-// import { ValidationPanel } from '@/components/ValidationPanel';
+import { ValidationPanel } from "@/components/ValidationPanel";
 import { NLQuery } from "@/components/NLQuery";
 import {
   Datasets,
@@ -455,7 +455,7 @@ const Page = () => {
                       </h3>
                     </div>
                     <div className="space-y-4">
-                      {/* <ValidationPanel errors={errors} /> */}
+                      <ValidationPanel errors={errors} />
                     </div>
                   </CardContent>
                 </Card>
