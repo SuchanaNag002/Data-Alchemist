@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataUploader } from "@/components/DataUploader";
 import { DataGrid, ColumnDef } from "@/components/DataGrid";
-import { PrioritizationPanel } from '@/components/PrioritizationPanel';
+import { PrioritizationPanel } from "@/components/PrioritizationPanel";
 import { RuleBuilder } from "@/components/RuleBuilder";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { NLQuery } from "@/components/NLQuery";
@@ -43,10 +43,12 @@ const Page = () => {
     tasks: [],
   });
   const [rules, setRules] = useState<Rule[]>([]);
-  const [weights] = useState<Weights>({
+  const [weights, setWeights] = useState<Weights>({
     priorityLevel: 50,
     requestedTaskFulfillment: 50,
     fairness: 50,
+    cost: 50,
+    speed: 50,
   });
   const [activeDataTab, setActiveDataTab] = useState<string>("clients");
 
@@ -146,24 +148,24 @@ const Page = () => {
 
   return (
     <main className="min-h-screen gradient-brand-bg">
-      <section className="relative overflow-hidden py-12 md:py-20 lg:py-24">
+      <section className="relative overflow-hidden py-8 sm:py-12 md:py-16 lg:py-20 xl:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-100/30 to-yellow-100/20" />
         <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight gradient-brand-text leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight gradient-brand-text leading-tight">
               {heroTitle}
             </h1>
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="mt-3 sm:mt-4 md:mt-6 text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
               {heroSubtitle}
             </p>
-            <div className="mt-6 sm:mt-8 flex flex-col items-center gap-4">
+            <div className="mt-4 sm:mt-6 md:mt-8 flex flex-col items-center gap-3 sm:gap-4">
               <Button
                 onClick={exportAll}
-                className="gradient-brand text-white border-0 hover:from-orange-800 hover:to-yellow-700 transition-all duration-300 shadow-lg hover:shadow-xl px-6 py-3 text-lg font-medium"
+                className="gradient-brand text-white border-0 hover:from-orange-800 hover:to-yellow-700 transition-all duration-300 shadow-lg hover:shadow-xl px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base lg:text-lg font-medium w-full sm:w-auto max-w-sm"
               >
                 Export Clean Data + rules.json
               </Button>
-              <div className="text-sm text-muted-foreground flex flex-wrap justify-center gap-3 sm:gap-4">
+              <div className="text-xs sm:text-sm text-muted-foreground flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4">
                 <a
                   href="/samples/clients.csv"
                   className="underline hover:text-orange-700 transition-colors"
@@ -188,30 +190,30 @@ const Page = () => {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 md:pb-16 lg:pb-20">
         <div className="max-w-7xl mx-auto">
           <Tabs defaultValue="data" className="w-full">
-            <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
               <TabsList className="bg-white/70 backdrop-blur-sm shadow-lg border gradient-brand-border rounded-xl p-1">
                 <TabsTrigger
                   value="data"
-                  className="data-[state=active]:gradient-brand data-[state=active]:text-white px-6 py-2 rounded-lg font-medium transition-all duration-300"
+                  className="data-[state=active]:gradient-brand data-[state=active]:text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-300 text-sm sm:text-base"
                 >
-                  <Database className="w-4 h-4 mr-2" />
+                  <Database className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Data
                 </TabsTrigger>
                 <TabsTrigger
                   value="tools"
-                  className="data-[state=active]:gradient-brand data-[state=active]:text-white px-6 py-2 rounded-lg font-medium transition-all duration-300"
+                  className="data-[state=active]:gradient-brand data-[state=active]:text-white px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-300 text-sm sm:text-base"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
+                  <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Tools
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="data" className="space-y-6 mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+            <TabsContent value="data" className="space-y-4 sm:space-y-6 mt-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 items-stretch">
                 <DataUploader
                   entity="clients"
                   onData={(rows) =>
@@ -235,7 +237,7 @@ const Page = () => {
               {availableTabs.length > 0 && (
                 <>
                   <div className="flex justify-center">
-                    <div className="flex items-center gap-1 bg-white/50 backdrop-blur-sm rounded-lg p-1 border shadow-sm">
+                    <div className="flex items-center gap-1 bg-white/50 backdrop-blur-sm rounded-lg p-1 border shadow-sm overflow-x-auto">
                       {availableTabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeDataTab === tab.key;
@@ -248,7 +250,7 @@ const Page = () => {
                             key={tab.key}
                             onClick={() => setActiveDataTab(tab.key)}
                             className={`
-                              px-4 py-2 rounded-md font-medium transition-all duration-300 flex items-center gap-2
+                              px-3 sm:px-4 py-2 rounded-md font-medium transition-all duration-300 flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap
                               ${
                                 isActive
                                   ? "bg-gray-200 text-gray-900 border-b-2 border-orange-500"
@@ -256,7 +258,7 @@ const Page = () => {
                               }
                             `}
                           >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                             {tab.label}
                             {errorCount > 0 && (
                               <div className="flex items-center ml-1">
@@ -270,16 +272,16 @@ const Page = () => {
                   </div>
 
                   <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border shadow-lg">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-3 sm:p-6">
                       {activeDataTab === "clients" &&
                         datasets.clients.length > 0 && (
                           <>
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg gradient-brand">
-                                  <Users className="w-5 h-5 text-white" />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 rounded-lg gradient-brand">
+                                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
-                                <h3 className="font-semibold gradient-brand-text text-lg">
+                                <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                                   Clients ({datasets.clients.length} records)
                                 </h3>
                               </div>
@@ -287,7 +289,7 @@ const Page = () => {
                                 .length > 0 && (
                                 <div className="flex items-center gap-1 text-red-600">
                                   <AlertCircle className="w-4 h-4" />
-                                  <span className="text-sm">
+                                  <span className="text-xs sm:text-sm">
                                     {
                                       errors.filter(
                                         (e) => e.entity === "clients"
@@ -319,12 +321,12 @@ const Page = () => {
                       {activeDataTab === "workers" &&
                         datasets.workers.length > 0 && (
                           <>
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg gradient-brand">
-                                  <FileText className="w-5 h-5 text-white" />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 rounded-lg gradient-brand">
+                                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
-                                <h3 className="font-semibold gradient-brand-text text-lg">
+                                <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                                   Workers ({datasets.workers.length} records)
                                 </h3>
                               </div>
@@ -332,7 +334,7 @@ const Page = () => {
                                 .length > 0 && (
                                 <div className="flex items-center gap-1 text-red-600">
                                   <AlertCircle className="w-4 h-4" />
-                                  <span className="text-sm">
+                                  <span className="text-xs sm:text-sm">
                                     {
                                       errors.filter(
                                         (e) => e.entity === "workers"
@@ -364,12 +366,12 @@ const Page = () => {
                       {activeDataTab === "tasks" &&
                         datasets.tasks.length > 0 && (
                           <>
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg gradient-brand">
-                                  <CheckSquare className="w-5 h-5 text-white" />
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+                              <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 rounded-lg gradient-brand">
+                                  <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
-                                <h3 className="font-semibold gradient-brand-text text-lg">
+                                <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                                   Tasks ({datasets.tasks.length} records)
                                 </h3>
                               </div>
@@ -377,7 +379,7 @@ const Page = () => {
                                 .length > 0 && (
                                 <div className="flex items-center gap-1 text-red-600">
                                   <AlertCircle className="w-4 h-4" />
-                                  <span className="text-sm">
+                                  <span className="text-xs sm:text-sm">
                                     {
                                       errors.filter((e) => e.entity === "tasks")
                                         .length
@@ -410,51 +412,51 @@ const Page = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="tools" className="mt-0 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+            <TabsContent value="tools" className="mt-0 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
                 <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 rounded-lg gradient-brand">
-                        <Settings className="w-6 h-6 text-white" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-2 sm:p-3 rounded-lg gradient-brand">
+                        <Settings className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <h3 className="font-semibold gradient-brand-text text-lg">
+                      <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                         Rule Builder
                       </h3>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <RuleBuilder onRulesChange={setRules} />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 rounded-lg gradient-brand">
-                        <TrendingUp className="w-6 h-6 text-white" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-2 sm:p-3 rounded-lg gradient-brand">
+                        <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <h3 className="font-semibold gradient-brand-text text-lg">
+                      <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                         Prioritization
                       </h3>
                     </div>
-                    <div className="space-y-4">
-                      {/* <PrioritizationPanel onChange={setWeights} /> */}
+                    <div className="space-y-3 sm:space-y-4">
+                      <PrioritizationPanel onChange={setWeights} />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300 md:col-span-2 xl:col-span-1 flex flex-col">
-                  <CardContent className="p-6 flex-1 flex flex-col">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 rounded-lg gradient-brand">
-                        <AlertCircle className="w-6 h-6 text-white" />
+                <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300 lg:col-span-2 xl:col-span-1 flex flex-col">
+                  <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-2 sm:p-3 rounded-lg gradient-brand">
+                        <AlertCircle className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <h3 className="font-semibold gradient-brand-text text-lg">
+                      <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
                         Validation
                       </h3>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <ValidationPanel errors={errors} />
                     </div>
                   </CardContent>
@@ -462,16 +464,16 @@ const Page = () => {
               </div>
 
               <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 rounded-lg gradient-brand">
-                      <MessageSquare className="w-6 h-6 text-white" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <div className="p-2 sm:p-3 rounded-lg gradient-brand">
+                      <MessageSquare className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold gradient-brand-text text-xl">
+                      <h3 className="font-semibold gradient-brand-text text-lg sm:text-xl">
                         Natural Language Query
                       </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         Ask questions about your data or request modifications
                         in plain English
                       </p>
