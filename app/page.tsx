@@ -10,6 +10,7 @@ import { PrioritizationPanel } from "@/components/PrioritizationPanel";
 import { RuleBuilder } from "@/components/RuleBuilder";
 import { ValidationPanel } from "@/components/ValidationPanel";
 import { NLQuery } from "@/components/NLQuery";
+import { NLRules } from "@/components/NLRules";
 import {
   Datasets,
   ClientRow,
@@ -34,6 +35,7 @@ import {
   Database,
   MessageSquare,
   AlertCircle,
+  Zap,
 } from "lucide-react";
 
 const Page = () => {
@@ -462,6 +464,26 @@ const Page = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="p-2 sm:p-3 rounded-lg gradient-brand">
+                      <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <h3 className="font-semibold gradient-brand-text text-base sm:text-lg">
+                      Natural Language Rules
+                    </h3>
+                  </div>
+                  <div className="space-y-3 sm:space-y-4">
+                    <NLRules
+                      datasets={datasets}
+                      existingRules={rules}
+                      onAdd={(newOnes) => setRules((r) => [...r, ...newOnes])}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card className="gradient-brand-bg gradient-brand-bg-hover gradient-brand-border border-2 shadow-lg">
                 <CardContent className="p-4 sm:p-6">
