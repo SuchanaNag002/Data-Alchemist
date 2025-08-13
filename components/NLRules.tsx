@@ -34,8 +34,6 @@ export const NLRules = ({ datasets, existingRules, onAdd }: Props) => {
     );
   }, [datasets, existingRules, parsed]);
 
-  const hasBlocking = previewErrors.some((e) => e.severity === "error");
-
   const onParse = () => {
     const { rules, notes } = parseRulesFromText(text, datasets);
     setParsed(rules);
@@ -44,12 +42,6 @@ export const NLRules = ({ datasets, existingRules, onAdd }: Props) => {
 
   const onConfirm = () => {
     if (!parsed.length) return;
-    if (hasBlocking) {
-      toast.error("Cannot add rules", {
-        description: "Please resolve errors in parsed rules first.",
-      });
-      return;
-    }
     onAdd(parsed);
     toast.success("Rules added", {
       description: `${parsed.length} rule(s) merged into your set.`,
@@ -79,7 +71,7 @@ export const NLRules = ({ datasets, existingRules, onAdd }: Props) => {
           <Button variant="secondary" onClick={onParse}>
             Parse
           </Button>
-          <Button onClick={onConfirm} disabled={!parsed.length || hasBlocking}>
+          <Button onClick={onConfirm} disabled={!parsed.length}>
             Add to Rules
           </Button>
         </div>
