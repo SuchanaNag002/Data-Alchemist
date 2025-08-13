@@ -55,7 +55,6 @@ export function parseRulesFromText(
     const s = raw.trim();
     if (!s) continue;
 
-    // 1) co-run / together
     if (/\b(co[-\s]?run|together|concurrently)\b/i.test(s)) {
       const mentioned = Array.from(taskIds).filter((id) =>
         new RegExp(`(?<![A-Za-z0-9_%-])${id}(?![A-Za-z0-9_%-])`).test(s)
@@ -68,7 +67,6 @@ export function parseRulesFromText(
       continue;
     }
 
-    // 2) load limit for WorkerGroup
     {
       const m = s.match(
         /(?:limit|max)\s+WorkerGroup\s+([A-Za-z0-9_-]+)\s*(?:to|=)?\s*(\d+)/i
@@ -91,7 +89,6 @@ export function parseRulesFromText(
       }
     }
 
-    // 3) slot restriction (min common slots) for ClientGroup/WorkerGroup
     {
       let m = s.match(
         /\b(ClientGroup|WorkerGroup)\s+([A-Za-z0-9_-]+).*?(?:min(?:imum)?|at\s+least)\s*(\d+)\s*(?:common\s+slots?)/i
@@ -130,9 +127,7 @@ export function parseRulesFromText(
       }
     }
 
-    // 4) phase window for a Task
     {
-      // capture TaskID first, then phases expression
       const taskMention = Array.from(taskIds).find((id) =>
         new RegExp(`(?<![A-Za-z0-9_%-])${id}(?![A-Za-z0-9_%-])`).test(s)
       );
@@ -155,7 +150,7 @@ export function parseRulesFromText(
             } else {
               notes.push(`No phases parsed for: "${s}"`);
             }
-          } catch (e) {
+          } catch {
             notes.push(`Failed to parse phases from: "${s}"`);
           }
           continue;
@@ -163,7 +158,6 @@ export function parseRulesFromText(
       }
     }
 
-    // 5) precedence (global)
     {
       const m = s.match(/\bglobal\s+precedence\s+(\d+)/i);
       if (m) {
@@ -177,7 +171,6 @@ export function parseRulesFromText(
       }
     }
 
-    // 6) pattern match
     {
       const m = s.match(
         /pattern\s+\/(.+?)\/\s*->\s*template\s+([A-Za-z0-9_-]+)(?:\s*params\s*(\{[\s\S]*\}))?/i
@@ -185,7 +178,7 @@ export function parseRulesFromText(
       if (m) {
         const regex = `/${m[1]}/`;
         const template = m[2];
-        let params: Record<string, any> | undefined;
+        let params: Record<string, unknown> | undefined;
         if (m[3]) {
           try {
             params = JSON.parse(m[3]);
@@ -198,7 +191,6 @@ export function parseRulesFromText(
       }
     }
 
-    // no rule parsed
     notes.push(`Unrecognized statement: "${s}"`);
   }
 
